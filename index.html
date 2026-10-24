@@ -121,7 +121,21 @@ function advanceBossDialogue(){if(gameState!=='boss-dialogue')return;bossDialogu
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function shuffleBossAttacks(){let next;do{next=shuffle([0,1,2,3]);}while(lastBossAttackOrder&&next.every((v,i)=>v===lastBossAttackOrder[i]));bossAttackOrder=next;lastBossAttackOrder=next.slice();}
- function makeTrapPlan(){const count=levels.length-1;const slots=shuffle(Array.from({length:count},(_,i)=>i));const kinds=shuffle(['cloud','tower','moon','spike','boulder','laser','anvil','spike','none','cloud','ledgeSpikes','fallingRock','baitCoin','collapsing','reverse','swap','lowgrav','fakefloor','reverse','swap','applestorm','applestorm']);trapPlan=Array(count).fill(null);for(let i=0;i<count;i++)trapPlan[slots[i]]={kind:kinds[i],x:Math.floor(260+Math.random()*570),delay:Math.floor(8+Math.random()*55)};musicTrapPhase=Math.floor(Math.random()*levels.length);musicTrapUsed=false;musicTrapDelay=-1;clearMusicProjectile();}
+ function makeTrapPlan(){
+ // Sequência fixa de armadilhas: cada tentativa repete os mesmos gatilhos,
+ // posições e tempos, para a dificuldade depender de memória muscular e ritmo.
+ const pattern=[
+  ['spike',390,24],['baitCoin',520,18],['fallingRock',445,16],['ledgeSpikes',620,22],
+  ['boulder',710,18],['cloud',360,24],['collapsing',580,20],['reverse',460,28],
+  ['laser',420,16],['anvil',675,20],['applestorm',540,18],['tower',730,14],
+  ['fakefloor',510,22],['ledgeSpikes',690,14],['moon',390,18],['swap',610,20],
+  ['fallingRock',470,12],['lowgrav',560,18],['applestorm',680,12],['collapsing',430,16],
+  ['boulder',620,10],['laser',500,9]
+ ];
+ const count=levels.length-1;trapPlan=Array.from({length:count},(_,i)=>{const q=pattern[i%pattern.length];return {kind:q[0],x:q[1],delay:q[2]};});
+ // A ameaça musical fica sempre na mesma fase e no mesmo tempo após reiniciar.
+ musicTrapPhase=17;musicTrapUsed=false;musicTrapDelay=-1;clearMusicProjectile();
+ }
 makeTrapPlan();
 function nearestTrapPlatform(x){const choices=platforms.filter(p=>p.y<485&&p.w>=55);if(!choices.length)return platforms[0];return choices.reduce((best,p)=>Math.abs((p.x+p.w/2)-x)<Math.abs((best.x+best.w/2)-x)?p:best,choices[0]);}
  function resetLevel(){const l=levels[level];clearMusicProjectile();musicTrapDelay=(level===musicTrapPhase&&!musicTrapUsed)?Math.floor(90+Math.random()*151):-1;platforms=l.platforms.map(p=>({x:p[0],y:p[1],w:p[2],h:p[3]}));
