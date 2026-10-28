@@ -253,7 +253,7 @@ function drawKidFrame(im,centerX,bottomY,face=1,height=34,opacity=1,rotation=0,f
  if(!im||!im.complete||!im.naturalWidth||!im.naturalHeight)return false;
  const scale=height/im.naturalHeight;
  const sw=fixedWidth==null?im.naturalWidth*scale:fixedWidth;
- const anchor=sw*0.60;
+ const anchor=sw*0.5;
  ctx.save();
  ctx.globalAlpha=opacity;
  ctx.translate(Math.round(centerX),Math.round(bottomY-height/2));
@@ -270,7 +270,8 @@ function drawKidAnimation(kind,index,centerX,bottomY,face=1,height=34,opacity=1,
  const frames=kidFrames[kind]||kidFrames[baseKind];
  if(kidSheet.complete&&kidSheet.naturalWidth&&frames&&frames.length){
   const f=frames[((Math.floor(index)%frames.length)+frames.length)%frames.length];
-  const scale=height/f.h,sw=fixedWidth==null?f.w*scale:fixedWidth,anchor=sw*0.60;
+  // Mantem a proporcao original do sprite: hitbox continua 11x21, visual acompanha a largura real do quadro.
+  const scale=height/f.h,sw=fixedWidth==null?f.w*scale:fixedWidth,anchor=sw*0.5;
   ctx.save();ctx.globalAlpha=opacity;ctx.translate(Math.round(centerX),Math.round(bottomY-height/2));
   if(rotation)ctx.rotate(rotation);if(face<0)ctx.scale(-1,1);
   ctx.drawImage(kidSheet,f.x,f.y,f.w,f.h,-anchor,-height/2,sw,height);ctx.restore();return true;
@@ -560,7 +561,7 @@ for(const cl of clones){const moving=Math.abs(cl.vx)>.15;const spr=cl.grounded?(
     ctx.fillStyle='#fff0a3';ctx.font='bold 15px monospace';ctx.fillText(gameState==='cart-launch'?'CATAPULTA! DIRETO PARA O CASTELO!':'SEGURE A DIREITA! O CARRINHO NÃO PARA!',18,28);if(gameState==='cart-launch'){ctx.fillStyle='#fff3bd';for(let q=0;q<12;q++){const sx=player.x-camera-10+Math.sin(frame+q*2)*22,sy=player.y+player.h/2+Math.cos(frame*.8+q)*18;ctx.fillRect(sx,sy,3,3)}}
   }
  for(const s of shots)rect(s.x,s.y,s.w,s.h,'#ffeb78');for(const bs of bossShots)rect(bs.x,bs.y,bs.w,bs.h,'#ff5878');if(endingApple)drawApple(endingApple.x-10.5,endingApple.y-12,21,24,frame)
- {let moving=Math.abs(player.vx)>0.1;let gun=player.shootAnim>0;let spr=player.on?(moving?'walk':'idle'):(player.vy<0?'jump':'fall');let rate=spr==='walk'?5:spr==='idle'?18:8;let spriteName=gun?spr+'Gun':spr;let bob=player.on&&moving?Math.sin(player.anim*0.16)*.55:0;const drawn=drawKidAnimation(spriteName,Math.floor(player.anim/rate),player.x-camera+player.w/2,player.y+player.h+bob,player.face,21,gameState==='dying'?Math.max(.25,deathTimer/52):1,gameState==='dying'?(52-deathTimer)*.28:0,11);if(!drawn)rect(player.x,player.y,11,21,'#f0bd55')}
+ {let moving=Math.abs(player.vx)>0.1;let gun=player.shootAnim>0;let spr=player.on?(moving?'walk':'idle'):(player.vy<0?'jump':'fall');let rate=spr==='walk'?5:spr==='idle'?18:8;let spriteName=gun?spr+'Gun':spr;let bob=player.on&&moving?Math.sin(player.anim*0.16)*.55:0;const drawn=drawKidAnimation(spriteName,Math.floor(player.anim/rate),player.x-camera+player.w/2,player.y+player.h+bob,player.face,21,gameState==='dying'?Math.max(.25,deathTimer/52):1,gameState==='dying'?(52-deathTimer)*.28:0,null);if(!drawn)rect(player.x-5,player.y,21,21,'#f0bd55')}
  if(gameState==='dying'){ctx.fillStyle='#ff355d';ctx.font='bold 30px monospace';ctx.fillText('K.O.!',player.x-camera-5,player.y-18);for(let i=0;i<8;i++){ctx.fillStyle=i%2?'#ffd45a':'#ff4267';ctx.fillRect(player.x-camera+12+Math.sin(frame+i)*22,player.y+12+Math.cos(frame*0.7+i)*18,4,4)}}
  ctx.fillStyle='#fff';ctx.font='14px monospace';ctx.fillText('X: DISPARO',W-125,24);
  
