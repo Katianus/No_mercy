@@ -403,16 +403,19 @@ function update(){
         const currentPlatform=boss.platformIndex>=0?bossPlatforms[boss.platformIndex]:platforms.find(p=>p.y===490&&p.x===0&&p.w>=W);
         const baseY=currentPlatform?currentPlatform.y:490;
         boss.y=baseY-boss.h;
+        // Patrulha pela plataforma inteira em vez de ficar andando num trecho minúsculo.
         let minX=0,maxX=W-boss.w;
-        if(boss.platformIndex>=0&&currentPlatform){
-          const center=currentPlatform.x+currentPlatform.w/2-boss.w/2;
-          const patrolSpan=Math.max(10,Math.min(34,currentPlatform.w/2-8));
-          minX=Math.max(-6,center-patrolSpan);maxX=Math.min(W-boss.w,center+patrolSpan);
+        if(currentPlatform){
+          const pad=6;
+          minX=Math.max(0,currentPlatform.x+pad);
+          maxX=Math.min(W-boss.w,currentPlatform.x+currentPlatform.w-boss.w-pad);
+          if(maxX<minX){const center=currentPlatform.x+currentPlatform.w/2-boss.w/2;minX=Math.max(0,center);maxX=Math.min(W-boss.w,center);}
         }
-        boss.x+=boss.dir*1.9;
-        if(boss.x<=minX){boss.x=minX;boss.dir=1;}else if(boss.x>=maxX){boss.x=maxX;boss.dir=-1;}
+        boss.x+=boss.dir*2.15;
+        if(boss.x<=minX){boss.x=minX;boss.dir=1;boss.modeTimer=Math.max(boss.modeTimer,145);}else if(boss.x>=maxX){boss.x=maxX;boss.dir=-1;boss.modeTimer=Math.max(boss.modeTimer,145);}
         boss.modeTimer++;
-        if(boss.modeTimer>=92&&bossPlatforms.length){
+        // Anda e ataca por um tempo; depois salta para a próxima plataforma.
+        if(boss.modeTimer>=150&&bossPlatforms.length){
           let targetIndex;
           if(boss.platformIndex<0){targetIndex=bossPlatforms.length-1;boss.platformDir=-1;}
           else {
