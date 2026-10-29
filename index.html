@@ -62,7 +62,7 @@ h1{font-size:clamp(25px,5vw,42px);letter-spacing:clamp(2px,.65vw,7px);text-shado
 <body>
 <div id="wrap">
 <h1>NO MERCY</h1>
-<div id="editionLine">FINAL DELUXE EDITION · FASES 5–22: ULTRA PIXEL-PERFECT</div>
+<div id="editionLine">FINAL DELUXE EDITION · 24 FASES · DIFICULDADE SEM PIEDADE</div>
 <div id="hud"><span id="level">FASE 1: FLORESTA PIXEL</span><span id="lives">♥</span><span id="score">MOEDAS: 0</span><span id="stats">MORTES: 0 · TEMPO: 00:00</span><button id="pauseToggle" type="button" aria-label="Pausar o jogo">Ⅱ PAUSAR</button><button id="soundToggle" type="button" aria-pressed="true">♫ SOM: ON</button><button id="fullscreenToggle" type="button" aria-label="Alternar tela cheia">⛶ TELA</button></div><div id="progressTrack" aria-label="Progresso do jogo"><div id="progressFill"></div></div>
 <canvas id="game" width="960" height="540" aria-label="Jogo de plataforma 2D" role="img"></canvas>
 <div id="help">PC: ← →/A-D andar · Espaço/W/↑ pular (duplo) · X/Z atirar · P/Esc pausar · R reiniciar</div>
@@ -73,7 +73,7 @@ h1{font-size:clamp(25px,5vw,42px);letter-spacing:clamp(2px,.65vw,7px);text-shado
 <div id="touchActions"><button id="touchRestart" class="touchAction" type="button" aria-label="Reiniciar fase">↻ REINICIAR</button><button id="touchPause" class="touchAction" type="button">Ⅱ PAUSAR</button></div>
 <div id="recordsLine" aria-live="polite">RECORDES LOCAIS · SALVOS NESTE NAVEGADOR</div>
 </div>
-<div id="overlay"><div id="panel"><h2>NO MERCY <span style="font-size:12px;color:#67e8f9;letter-spacing:1px">DELUXE</span></h2><p>Um jogo de plataforma retrô com <strong>24 fases</strong>. As fases 1–4 mantêm a dificuldade original; as fases 5–22 são um desafio ULTRA PIXEL-PERFECT com plataformas mínimas e espinhos de precisão. Prepare-se para morrer muito antes do chefão final!</p><p><strong>CONTROLES PC</strong><br>← → ou A/D: andar · Espaço/W/↑: pular e pulo duplo<br>X/Z: atirar · P/Esc: pausar · R: reiniciar a fase</p><p><strong>CONTROLES CELULAR</strong><br>Use ◀ ▶ para andar, ▲ para pular e ✦ para atirar. Segure o pulo para saltar mais alto e toque novamente no ar para usar o pulo duplo.</p><p>Atire nos blocos com <strong>S</strong> para ativar checkpoints. O progresso da fase, recordes e moedas ficam mais fáceis de acompanhar nesta edição.</p><button id="start">▶ COMEÇAR RUN</button></div></div>
+<div id="overlay"><div id="panel"><h2>NO MERCY <span style="font-size:12px;color:#67e8f9;letter-spacing:1px">DELUXE</span></h2><p>Um jogo de plataforma retrô com <strong>24 fases</strong>, armadilhas traiçoeiras, checkpoints e um chefão gigante com três tipos de ataque na batalha final.</p><p><strong>CONTROLES PC</strong><br>← → ou A/D: andar · Espaço/W/↑: pular e pulo duplo<br>X/Z: atirar · P/Esc: pausar · R: reiniciar a fase</p><p><strong>CONTROLES CELULAR</strong><br>Use ◀ ▶ para andar, ▲ para pular e ✦ para atirar. Segure o pulo para saltar mais alto e toque novamente no ar para usar o pulo duplo.</p><p>Atire nos blocos com <strong>S</strong> para ativar checkpoints. O progresso da fase, recordes e moedas ficam mais fáceis de acompanhar nesta edição.</p><button id="start">▶ COMEÇAR RUN</button></div></div>
 <script>
 (()=>{
 const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d',{alpha:false});
@@ -166,7 +166,36 @@ const levels=[
  {name:'O ÚLTIMO JULGAMENTO',bg:'#160d20',ground:'#50303e',platforms:[[0,490,120,50],[155,420,90,18],[285,350,90,18],[415,405,90,18],[545,330,90,18],[675,395,90,18],[805,340,155,18]],goal:900,enemyCount:8,boss:false,troll:'electric'},
  {name:'TRILHOS DO CASTELO: CORRIDA DO CARRINHO',bg:'#182c43',ground:'#555d6b',platforms:[[0,490,230,50],[300,490,160,50],[530,490,160,50],[760,490,200,50],[245,420,58,14],[475,390,58,14],[705,420,58,14]],goal:885,enemyCount:0,boss:false,troll:'cartCastle'},
  {name:'CHEFÃO FINAL: O INVASOR',bg:'#21172f',ground:'#48304e',platforms:[[0,490,960,50],[120,410,100,18],[290,350,100,18],[460,410,100,18],[630,350,100,18],[800,410,160,18]],goal:900,enemyCount:0,boss:true}
-]
+ ]
+// GERADOR DE FASES: as fases 1, 2, 23 e 24 são intocáveis.
+// Nas fases 3–22, somente a geometria das plataformas varia; os dados de
+// armadilhas, trolls, inimigos e ataques permanecem exatamente os mesmos.
+const fixedPhaseLayouts = new Map(levels.map((l,i)=>[i,l.platforms.map(p=>p.slice())]));
+function generatePhaseLayouts(){
+  for(let i=0;i<levels.length;i++) levels[i].platforms=fixedPhaseLayouts.get(i).map(p=>p.slice());
+  for(let i=2;i<=21;i++){
+    const base=fixedPhaseLayouts.get(i);
+    const ground=base.filter(p=>p[1]>=485);
+    const upper=base.filter(p=>p[1]<485).map(p=>p.slice());
+    // Mistura ordem e altura com variações limitadas para manter saltos alcançáveis.
+    const shuffled=upper.map((p,j)=>({p,j,roll:Math.random()}));
+    shuffled.sort((a,b)=>a.p[0]-b.p[0]);
+    const count=shuffled.length;
+    shuffled.forEach((item,j)=>{
+      const p=item.p;
+      const span=Math.max(0,W-p[2]-50);
+      const ideal=count<=1?Math.min(420,span):50+j*(span-50)/(count-1);
+      const jitter=(Math.random()*2-1)*42;
+      p[0]=Math.max(25,Math.min(W-p[2]-5,Math.round(ideal+jitter)));
+      const yOptions=[315,340,365,390,415,440];
+      const originalBand=Math.max(0,Math.min(yOptions.length-1,Math.round((p[1]-315)/25)));
+      const offset=Math.floor(Math.random()*3)-1;
+      p[1]=yOptions[Math.max(0,Math.min(yOptions.length-1,originalBand+offset))];
+    });
+    shuffled.sort((a,b)=>a.p[0]-b.p[0]);
+    levels[i].platforms=[...ground,...shuffled.map(v=>v.p)];
+  }
+}
 let level=0,player,platforms,enemies,coins,shots,boss,score=0,lives=1,gameState='menu',camera=0,frame=0,deathCount=0,runStart=0,checkpoint={level:0,x:45,y:420},saveBlocks=[],destructibleBlocks=[],shotCooldown=0,jumpHeld=false,fruitChasers=[],bossShots=[],fallingClouds=[],fakePlatforms=[],reverseTimer=0,swapTimer=0,lowGravityTimer=0,clones=[],playerTrail=[],laserBeams=[],apples=[],appleDrops=0,bossIntroTimer=0,floorApples=[],floorAppleTimer=0,endingTimer=0,endingApple=null,endingDodged=false,surpriseSpike=null,worldHazards=[],caveTraps=[],precisionSpikes=[],gears=[],appleStorm=[],appleStormTimer=150,deathTimer=0,deathCause='',cartFish=[],cartX=0,cartY=470,cartRoll=0,cartLaunchTimer=0;let bossAttackOrder=[],lastBossAttackOrder=null;
 let trapPlan=[];
 let musicTrapPhase=0,musicTrapUsed=false,musicTrapDelay=-1,musicProjectile=null,musicMissileElement=null;
@@ -228,49 +257,11 @@ function shuffleBossAttacks(){}
  }
 makeTrapPlan();
 function nearestTrapPlatform(x){const choices=platforms.filter(p=>p.y<485&&p.w>=55);if(!choices.length)return platforms[0];return choices.reduce((best,p)=>Math.abs((p.x+p.w/2)-x)<Math.abs((best.x+best.w/2)-x)?p:best,choices[0]);}
-const ultraPixelPerfectLayouts={
-  // Fase 5: percurso de precisão em zigue-zague, com mudanças curtas de altura.
-  4:[[0,490,104,50],[130,430,48,14],[207,365,42,14],[275,420,44,14],[345,342,42,14],[421,392,40,14],[492,310,42,14],[564,365,45,14],[642,285,42,14],[718,345,48,14],[800,410,160,18]],
-  // Fase 6: arco de nuvens, sobe no meio e desce em direção à saída.
-  5:[[0,490,145,50],[170,434,72,16],[255,382,61,16],[340,326,54,16],[420,268,50,16],[500,305,46,16],[575,354,50,16],[650,401,56,16],[730,431,64,16],[835,400,125,18]],
-  // Fase 7: chão falso em degraus irregulares, com plataformas que quebram o ritmo.
-  6:[[0,490,112,50],[135,421,88,16],[245,455,54,14],[319,390,61,14],[398,442,48,14],[471,366,64,14],[552,418,51,14],[630,342,66,14],[710,395,55,14],[785,350,60,14],[865,415,95,18]],
-  // Fase 8: corredor em serra, alternando saltos altos e quedas curtas.
-  7:[[0,490,105,50],[130,405,54,14],[205,455,48,14],[275,365,42,14],[340,440,44,14],[410,330,42,14],[480,418,44,14],[555,300,42,14],[630,385,45,14],[710,340,48,14],[790,425,55,14],[870,390,90,18]],
-  // Fase 9: fábrica vertical com desvios laterais e plataformas em alturas variadas.
-  8:[[0,490,115,50],[135,448,74,14],[225,380,58,14],[300,310,44,14],[370,365,46,14],[445,430,60,14],[535,350,50,14],[610,275,46,14],[685,345,54,14],[770,415,68,14],[860,380,100,18]],
-  // Fase 10: floresta em degraus curtos, com alternância de plataformas altas e baixas.
-  9:[[0,490,95,50],[115,420,48,14],[180,350,52,14],[260,405,44,14],[322,320,48,14],[390,375,42,14],[452,290,45,14],[515,360,48,14],[585,300,43,14],[650,390,55,14],[730,325,48,14],[800,405,160,18]],
-  // Fase 11: rota de engrenagens com subidas e descidas espaçadas.
-  10:[[0,490,125,50],[148,430,70,14],[238,360,58,14],[315,418,46,14],[385,325,52,14],[460,390,44,14],[530,300,52,14],[605,365,45,14],[675,285,50,14],[750,355,58,14],[840,410,120,18]],
-  // Fase 12: escadaria de castelo que sobe ao centro e desce pelos dois lados.
-  11:[[0,490,105,50],[130,440,60,14],[205,380,48,14],[270,315,50,14],[340,260,48,14],[405,320,46,14],[470,375,48,14],[540,315,46,14],[610,260,50,14],[680,335,52,14],[755,400,55,14],[840,430,120,18]],
-  // Fase 13: saltos curtos para frente e para trás em uma sequência de picos.
-  12:[[0,490,100,50],[125,420,44,14],[190,330,44,14],[250,410,44,14],[310,300,44,14],[370,380,44,14],[430,270,44,14],[490,360,44,14],[550,250,44,14],[610,345,44,14],[675,290,46,14],[740,390,52,14],[825,420,135,18]],
-  // Fase 14: labirinto elétrico em degraus e pequenos patamares laterais.
-  13:[[0,490,120,50],[150,445,78,14],[175,365,42,14],[250,315,42,14],[325,365,42,14],[400,430,74,14],[485,370,42,14],[555,300,42,14],[625,350,42,14],[700,415,65,14],[780,360,44,14],[850,420,110,18]],
-  // Fase 15: céu em colapso, uma subida alta seguida por descida longa.
-  14:[[0,490,115,50],[140,435,72,14],[230,365,68,14],[320,295,60,14],[410,225,52,14],[495,280,48,14],[570,345,50,14],[650,405,60,14],[745,445,58,14],[835,410,125,18]],
-  // Fase 16: controles traiçoeiros, plataformas em pares com ritmo de salto quebrado.
-  15:[[0,490,90,50],[115,455,52,14],[190,400,60,14],[270,445,48,14],[340,370,58,14],[420,425,48,14],[490,345,58,14],[570,410,46,14],[640,330,55,14],[715,390,48,14],[785,350,50,14],[860,410,100,18]],
-  // Fase 17: túnel do eco, dois corredores baixos e patamares escalonados.
-  16:[[0,490,130,50],[150,430,76,14],[245,430,48,14],[305,365,58,14],[380,365,44,14],[440,420,62,14],[520,420,48,14],[580,350,58,14],[655,350,42,14],[715,410,62,14],[795,410,50,14],[865,425,95,18]],
-  // Fase 18: fábrica do caos em uma escadaria quebrada por quedas.
-  17:[[0,490,95,50],[115,445,50,14],[185,385,48,14],[250,325,46,14],[315,385,44,14],[380,445,42,14],[445,365,44,14],[510,300,42,14],[575,360,44,14],[640,420,48,14],[715,350,50,14],[790,410,54,14],[870,425,90,18]],
-  // Fase 19: gravidade zero, rota ondulada com um pico central alto.
-  18:[[0,490,100,50],[122,420,54,14],[205,330,48,14],[285,255,44,14],[365,325,48,14],[445,405,54,14],[530,345,44,14],[610,260,48,14],[690,335,44,14],[770,420,50,14],[850,370,110,18]],
-  // Fase 20: corredor da mentira, patamares em pares e mudanças frequentes de altura.
-  19:[[0,490,125,50],[150,435,80,14],[250,435,45,14],[310,370,42,14],[380,420,48,14],[455,345,42,14],[525,395,48,14],[600,320,42,14],[670,380,48,14],[745,305,44,14],[815,375,50,14],[880,420,80,18]],
-  // Fase 21: mundo desmoronando, uma subida diagonal até as ruínas e uma saída baixa.
-  20:[[0,490,110,50],[135,430,60,14],[215,370,58,14],[295,310,56,14],[375,250,54,14],[455,310,50,14],[530,370,52,14],[605,430,56,14],[690,390,55,14],[770,345,58,14],[850,410,110,18]],
-  // Fase 22: julgamento final, sequência de degraus em zigue-zague e patamares estreitos.
-  21:[[0,490,115,50],[140,450,44,14],[210,385,44,14],[280,320,44,14],[350,385,44,14],[420,450,44,14],[490,390,44,14],[560,315,44,14],[630,250,44,14],[700,315,44,14],[770,380,48,14],[840,430,120,18]]
-};
- function resetLevel(){const l=levels[level];clearMusicProjectile();musicTrapDelay=(level===musicTrapPhase&&!musicTrapUsed)?Math.floor(90+Math.random()*151):-1;platforms=(ultraPixelPerfectLayouts[level]||l.platforms).map(p=>({x:p[0],y:p[1],w:p[2],h:p[3]}));
+ function resetLevel(){const l=levels[level];clearMusicProjectile();musicTrapDelay=(level===musicTrapPhase&&!musicTrapUsed)?Math.floor(90+Math.random()*151):-1;platforms=l.platforms.map(p=>({x:p[0],y:p[1],w:p[2],h:p[3]}));
 // Rotas extras de plataformas flutuantes: mais caminhos de salto em quase todas as fases.
 const bonusRoutes={0:[[145,455,76,16],[300,405,82,16],[455,375,76,16],[610,430,82,16],[755,370,78,16]],1:[[120,450,72,16],[280,390,82,16],[455,335,76,16],[630,390,80,16],[790,350,76,16]],2:[[145,440,82,16],[305,385,76,16],[470,340,82,16],[650,385,76,16],[790,330,80,16]],3:[[130,445,75,16],[285,395,80,16],[440,350,76,16],[600,400,80,16],[770,350,76,16]],4:[[145,445,80,16],[300,395,76,16],[465,350,82,16],[625,405,76,16],[785,355,80,16]],5:[[130,445,76,16],[290,390,82,16],[450,345,76,16],[620,395,82,16],[790,345,76,16]],6:[[130,445,80,16],[300,390,76,16],[470,345,82,16],[640,395,76,16],[800,345,82,16]],7:[[140,445,76,16],[300,390,82,16],[465,345,76,16],[630,395,82,16],[795,345,76,16]],8:[[130,445,82,16],[300,390,76,16],[470,345,82,16],[640,395,76,16],[800,345,82,16]],9:[[125,445,76,16],[285,390,82,16],[455,345,76,16],[620,395,82,16],[790,345,76,16]],10:[[125,445,76,16],[280,385,82,16],[440,335,76,16],[600,390,82,16],[780,335,76,16]],11:[[125,445,82,16],[285,390,76,16],[455,340,82,16],[620,395,76,16],[790,340,82,16]],12:[[125,445,76,16],[285,390,82,16],[450,345,76,16],[620,395,82,16],[790,345,76,16]],13:[[125,445,82,16],[285,390,76,16],[455,340,82,16],[620,395,76,16],[790,340,82,16]],14:[[125,445,76,16],[285,390,82,16],[450,345,76,16],[620,395,82,16],[790,345,76,16]],15:[[125,445,82,16],[285,390,76,16],[455,340,82,16],[620,395,76,16],[790,340,82,16]]};
-if(bonusRoutes[level]&&!(level>=4&&level<=21))platforms.push(...bonusRoutes[level].map(p=>({x:p[0],y:p[1],w:p[2],h:p[3],bonus:true})));
-if(!(level>=4&&level<=21)&&level!==22&&!platforms.some(p=>p.y===490&&p.x===0&&p.w>=W)){platforms.push({x:0,y:490,w:W,h:50});}const spawn=(checkpoint.level===level?{x:checkpoint.x,y:checkpoint.y}:{x:45,y:420});player={x:spawn.x,y:spawn.y,w:32,h:32,vx:0,vy:0,on:false,face:1,inv:0,anim:0,jumps:0,shootAnim:0};saveBlocks=[{x:Math.min(440,Math.max(180,(l.goal||900)*.42)),y:Math.max(300,Math.min(445,platforms.find(p=>p.w>=100&&p.y<490)?.y-28||452)),w:26,h:28,active:checkpoint.level===level&&checkpoint.x>45}];if(level>=4&&level<=21){const cps=platforms.filter(p=>p.x>90&&p.x<820&&p.w>=55&&p.w<=64&&p.y<490);const cp=cps[Math.min(cps.length-1,Math.floor(cps.length*.4))];if(cp)saveBlocks=[{x:cp.x+Math.floor((cp.w-26)/2),y:cp.y-28,w:26,h:28,active:checkpoint.level===level&&checkpoint.x>45}];}destructibleBlocks=[{x:Math.min(690,Math.max(300,(l.goal||900)*.68)),y:Math.max(300,Math.min(452,platforms.find(p=>p.w>=100&&p.y<490)?.y-26||454)),w:28,h:26,hp:3,alive:true}];shotCooldown=0;fruitChasers=([2,6,10,14,18].includes(level)?[{x:Math.min(900,Math.max(610,(l.goal||900)*.78)),y:115,w:21,h:24,vx:0,vy:0,active:false,done:false}]:[]);enemies=[];for(let i=0;i<l.enemyCount;i++)enemies.push({x:220+i*145,y:450,w:27,h:30,vx:i%2?1.1:-1.1,alive:true});coins=[];[[210,360],[435,290],[655,350],[825,260],[520,450]].forEach(([x,y])=>coins.push({x,y,got:false}));shots=[];boss=levels[level].boss?{x:W-192-24,y:490,w:192,h:192,hp:120,maxHp:120,phase:1,dir:-1,face:-1,alive:true,flash:0,shotTimer:42,largeTimer:110,grenadeTimer:170,emerge:0,anim:0,mode:'emerge',modeTimer:0,platformIndex:-1,platformDir:-1,jump:null}:null;endingTimer=0;endingApple=null;endingDodged=false;const plan=(level<levels.length-1&&level!==22)?trapPlan[level]:null;surpriseSpike=(plan&&plan.kind==='spike'?{x:level===8?855:Math.max(250,Math.min(855,plan.x)),warning:0,active:0,done:false}:null);worldHazards=[];gears=[];appleStorm=[];appleStormTimer=120+Math.random()*60;if(l.troll==='gears'){gears=[{x:350,y:454,r:17,vx:3.65,vy:-2.0,baseY:420,phase:0},{x:710,y:454,r:17,vx:-3.95,vy:1.9,baseY:425,phase:2}];}if(plan&&plan.kind==='applestorm'){appleStormTimer=120+Math.random()*60;}if(plan&&['cloud','tower','moon','boulder','laser','anvil','reverse','swap','lowgrav','fakefloor'].includes(plan.kind)){const kind=plan.kind;worldHazards.push({kind,x:Math.max(170,Math.min(850,plan.x)),y:kind==='moon'?-120:kind==='tower'?-260:kind==='anvil'?-100:kind==='laser'?330:kind==='boulder'?450:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:-80,w:kind==='moon'?192:kind==='tower'?62:kind==='anvil'?44:kind==='boulder'?48:kind==='laser'?960:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:100,h:kind==='moon'?192:kind==='tower'?270:kind==='anvil'?54:kind==='boulder'?44:kind==='laser'?10:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:48,state:'waiting',timer:0,delay:plan.delay,vy:0,done:false,dir:Math.random()<.5?-1:1});}caveTraps=[];cartFish=level===22?[{x:264,baseY:481,phase:0,w:36,h:28},{x:496,baseY:481,phase:38,w:36,h:28},{x:727,baseY:481,phase:76,w:36,h:28}]:[];cartX=player.x-23;cartY=470;cartRoll=0;cartLaunchTimer=0;
+if(bonusRoutes[level])platforms.push(...bonusRoutes[level].map(p=>({x:p[0],y:p[1],w:p[2],h:p[3],bonus:true})));
+if(level!==22&&!platforms.some(p=>p.y===490&&p.x===0&&p.w>=W)){platforms.push({x:0,y:490,w:W,h:50});}const spawn=(checkpoint.level===level?{x:checkpoint.x,y:checkpoint.y}:{x:45,y:420});player={x:spawn.x,y:spawn.y,w:32,h:32,vx:0,vy:0,on:false,face:1,inv:0,anim:0,jumps:0,shootAnim:0};saveBlocks=[{x:Math.min(440,Math.max(180,(l.goal||900)*.42)),y:Math.max(300,Math.min(445,platforms.find(p=>p.w>=100&&p.y<490)?.y-28||452)),w:26,h:28,active:checkpoint.level===level&&checkpoint.x>45}];destructibleBlocks=[{x:Math.min(690,Math.max(300,(l.goal||900)*.68)),y:Math.max(300,Math.min(452,platforms.find(p=>p.w>=100&&p.y<490)?.y-26||454)),w:28,h:26,hp:3,alive:true}];shotCooldown=0;fruitChasers=([2,6,10,14,18].includes(level)?[{x:Math.min(900,Math.max(610,(l.goal||900)*.78)),y:115,w:21,h:24,vx:0,vy:0,active:false,done:false}]:[]);enemies=[];for(let i=0;i<l.enemyCount;i++)enemies.push({x:220+i*145,y:450,w:27,h:30,vx:i%2?1.1:-1.1,alive:true});coins=[];[[210,360],[435,290],[655,350],[825,260],[520,450]].forEach(([x,y])=>coins.push({x,y,got:false}));shots=[];boss=levels[level].boss?{x:W-192-24,y:490,w:192,h:192,hp:120,maxHp:120,phase:1,dir:-1,face:-1,alive:true,flash:0,shotTimer:42,largeTimer:110,grenadeTimer:170,emerge:0,anim:0,mode:'emerge',modeTimer:0,platformIndex:-1,platformDir:-1,jump:null}:null;endingTimer=0;endingApple=null;endingDodged=false;const plan=(level<levels.length-1&&level!==22)?trapPlan[level]:null;surpriseSpike=(plan&&plan.kind==='spike'?{x:level===8?855:Math.max(250,Math.min(855,plan.x)),warning:0,active:0,done:false}:null);worldHazards=[];gears=[];appleStorm=[];appleStormTimer=120+Math.random()*60;if(l.troll==='gears'){gears=[{x:350,y:454,r:17,vx:3.65,vy:-2.0,baseY:420,phase:0},{x:710,y:454,r:17,vx:-3.95,vy:1.9,baseY:425,phase:2}];}if(plan&&plan.kind==='applestorm'){appleStormTimer=120+Math.random()*60;}if(plan&&['cloud','tower','moon','boulder','laser','anvil','reverse','swap','lowgrav','fakefloor'].includes(plan.kind)){const kind=plan.kind;worldHazards.push({kind,x:Math.max(170,Math.min(850,plan.x)),y:kind==='moon'?-120:kind==='tower'?-260:kind==='anvil'?-100:kind==='laser'?330:kind==='boulder'?450:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:-80,w:kind==='moon'?192:kind==='tower'?62:kind==='anvil'?44:kind==='boulder'?48:kind==='laser'?960:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:100,h:kind==='moon'?192:kind==='tower'?270:kind==='anvil'?54:kind==='boulder'?44:kind==='laser'?10:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:48,state:'waiting',timer:0,delay:plan.delay,vy:0,done:false,dir:Math.random()<.5?-1:1});}caveTraps=[];cartFish=level===22?[{x:264,baseY:481,phase:0,w:36,h:28},{x:496,baseY:481,phase:38,w:36,h:28},{x:727,baseY:481,phase:76,w:36,h:28}]:[];cartX=player.x-23;cartY=470;cartRoll=0;cartLaunchTimer=0;
  // Pixel-perfect spike gauntlets: fixed positions, repeatable after every respawn.
  // Each spike is a triangle with a narrow collision profile, not a full rectangle.
  const spikeCourses={
@@ -284,36 +275,11 @@ if(!(level>=4&&level<=21)&&level!==22&&!platforms.some(p=>p.y===490&&p.x===0&&p.
   22:[{x:155,y:490,w:21,h:36},{x:180,y:490,w:21,h:36},{x:362,y:490,w:21,h:36},{x:387,y:490,w:21,h:36},{x:575,y:490,w:21,h:36},{x:600,y:490,w:21,h:36},{x:816,y:490,w:21,h:36},{x:841,y:490,w:21,h:36}]
  };
  precisionSpikes=(spikeCourses[level]||[]).map(t=>({...t,active:true}));
- // Fases 5–22: percurso extremo, repetível e com zonas de aterrissagem de poucos pixels.
- if(level>=4&&level<=21){
-   precisionSpikes=[];
-   const route=platforms.filter(p=>p.x>90&&p.w<=64&&p.y<490).sort((a,b)=>a.x-b.x);
-   for(let i=0;i<route.length;i++){
-     const p=route[i];
-     const spikeW=level>=14?13:level>=9?12:11;
-     const spikeH=level>=14?38:level>=9?34:30;
-     const leftX=p.x, rightX=p.x+p.w-spikeW;
-     if(level<9){
-       const sx=((i+level)%2===0)?leftX:rightX;
-       precisionSpikes.push({x:sx,y:p.y,w:spikeW,h:spikeH,active:true});
-     }else if(level<14){
-       const sx=((i+level)%2===0)?leftX:rightX;
-       precisionSpikes.push({x:sx,y:p.y,w:spikeW,h:spikeH,active:true});
-       if(i%2===1)precisionSpikes.push({x:sx===leftX?rightX:leftX,y:p.y,w:spikeW,h:spikeH,active:true});
-     }else{
-       precisionSpikes.push({x:leftX,y:p.y,w:spikeW,h:spikeH,active:true});
-       precisionSpikes.push({x:rightX,y:p.y,w:spikeW,h:spikeH,active:true});
-     }
-   }
-   // O patamar final também exige entrar pelo espaço seguro e saltar sobre os últimos espinhos.
-   const endPad=platforms.filter(p=>p.x>=840&&p.w>=85).sort((a,b)=>a.x-b.x)[0];
-   if(endPad){const sw=level>=14?14:12;precisionSpikes.push({x:endPad.x+8,y:endPad.y,w:sw,h:level>=14?36:30,active:true});}
- }
  if(plan&&['ledgeSpikes','fallingRock','baitCoin','collapsing'].includes(plan.kind)){const px=Math.max(150,Math.min(850,plan.x));const target=nearestTrapPlatform(px);if(plan.kind==='ledgeSpikes'){const tx=Math.max(target.x+5,Math.min(target.x+target.w-48,px-21));caveTraps.push({kind:'ledgeSpikes',x:tx,y:target.y,w:44,h:34,warning:0,active:0,triggered:false,done:false});}else if(plan.kind==='fallingRock'){caveTraps.push({kind:'fallingRock',x:px,y:-42,w:32,h:32,vy:0,state:'waiting',timer:0,done:false});}else if(plan.kind==='baitCoin'){const tx=Math.max(target.x+6,Math.min(target.x+target.w-24,target.x+target.w/2-9));caveTraps.push({kind:'baitCoin',x:tx,y:target.y-27,w:18,h:18,surfaceY:target.y,warning:0,active:0,triggered:false,done:false});}else if(plan.kind==='collapsing'){target.collapseTrap=true;target.collapseTriggered=false;target.collapseTimer=0;}}bossShots=[];fallingClouds=[];fakePlatforms=[];reverseTimer=0;swapTimer=0;lowGravityTimer=0;clones=[];playerTrail=[];laserBeams=[];apples=[];appleDrops=0;bossIntroTimer=0;floorApples=[];floorAppleTimer=300;
  if(l.troll==='apples'){for(let i=0;i<7;i++)apples.push({treeX:125+i*125,x:125+i*125+22,y:258,w:21,h:24,wait:75+i*38,active:false,done:false,vy:0,warning:0,number:i});}
  updateHud();if(l.boss){gameState='play';bossIntroTimer=0;document.querySelector('#overlay').style.display='none';}}
 function updateHud(){const levelEl=document.querySelector('#level');if(levelEl)levelEl.textContent=`FASE ${level+1}/${levels.length}: ${levels[level].name}`;const progress=document.querySelector('#progressFill');if(progress)progress.style.width=Math.min(100,((level+(levels[level].boss&&boss?0.5:0))/levels.length*100))+'%';const livesEl=document.querySelector('#lives');if(livesEl)livesEl.textContent='♥ CHECKPOINT';const scoreEl=document.querySelector('#score');if(scoreEl)scoreEl.textContent='MOEDAS: '+score;const elapsed=Math.max(0,Math.floor((Date.now()-(runStart||Date.now()))/1000));const statsEl=document.querySelector('#stats');if(statsEl)statsEl.textContent='MORTES: '+deathCount+' · TEMPO: '+fmtTime(elapsed);const pauseText=gameState==='paused'?'▶ RETOMAR':'Ⅱ PAUSAR';const pauseEl=document.querySelector('#pauseToggle');if(pauseEl)pauseEl.textContent=pauseText;const touchPauseEl=document.querySelector('#touchPause');if(touchPauseEl)touchPauseEl.textContent=pauseText;}
-function start(){makeTrapPlan();shuffleBossAttacks();bossDialogueSeen=false;level=0;score=0;lives=1;deathCount=0;runStart=Date.now();checkpoint={level:0,x:45,y:420};resetLevel();gameState='play';document.querySelector('#overlay').style.display='none';if(soundEnabled){ensureAudio();startMusic();}updateHud();}
+function start(){generatePhaseLayouts();makeTrapPlan();shuffleBossAttacks();bossDialogueSeen=false;level=0;score=0;lives=1;deathCount=0;runStart=Date.now();checkpoint={level:0,x:45,y:420};resetLevel();gameState='play';document.querySelector('#overlay').style.display='none';if(soundEnabled){ensureAudio();startMusic();}updateHud();}
 document.querySelector('#start').onclick=start;
 renderRecords();
 document.querySelector('#start').setAttribute('aria-label','Começar NO MERCY');
@@ -546,7 +512,8 @@ bossShots=bossShots.filter(bs=>bs.life>0&&bs.x>-80&&bs.x<W+80&&bs.y>-80&&bs.y<H+
  }
  // Cave/platform traps inspired by the new reference image: popping spikes, falling rocks, bait coins and crumbling ledges.
   if(level<levels.length-1){for(const t of caveTraps){if(t.done)continue;if(t.kind==='ledgeSpikes'||t.kind==='baitCoin'){if(t.kind==='baitCoin'&&!t.triggered&&overlap(player,{x:t.x,y:t.y,w:t.w,h:t.h})){t.triggered=true;t.warning=25;}if(t.kind==='ledgeSpikes'&&!t.triggered&&player.x+player.w>t.x-80&&player.x<t.x+t.w+80&&player.y<t.y+26&&player.y+player.h>t.y-100){t.triggered=true;t.warning=34;}if(t.warning>0){t.warning--;if(t.warning===0)t.active=38;}if(t.active>0){t.active--;if(overlap(player,{x:t.x,y:(t.kind==='baitCoin'?t.surfaceY:t.y)-34,w:t.w,h:34}))hurt(t.kind==='baitCoin'?'A moeda era uma armadilha!':'Espinhos saltaram da plataforma!');if(t.active===0)t.done=true;}}else if(t.kind==='fallingRock'){if(t.state==='waiting'&&Math.abs((player.x+player.w/2)-t.x)<105){t.state='warning';t.timer=28;}else if(t.state==='warning'){t.timer--;if(t.timer<=0){t.state='falling';t.vy=1;}}else if(t.state==='falling'){t.vy=Math.min(t.vy+.62,13);t.y+=t.vy;if(overlap(player,t)){hurt('Uma pedra caiu do teto da caverna!');t.done=true;}if(t.y>H+25)t.done=true;}}}}
-  // Removidos os antigos hitboxes invisíveis de teto/parede. Os desafios de precisão continuam com espinhos visíveis desenhados no cenário.
+  // Espinhos de teto e parede em fases avançadas: posição e tempo fixos para treinar memória muscular.
+ if(level>=5&&level<levels.length-1&&level!==22){const spikeX=610+(level%3)*70;const activeWindow=(frame%210);if(activeWindow>118&&activeWindow<151){const ceiling={x:spikeX-camera,y:70,w:52,h:28};if(overlap(player,ceiling))hurt('Os espinhos do teto pegaram The Kid!');const wall={x:885-camera,y:300,w:24,h:82};if(overlap(player,wall))hurt('Os espinhos da parede pegaram The Kid!');}}
  // Surprise spike trap: any non-boss phase can roll this trap.
   if(surpriseSpike&&!surpriseSpike.done&&level<levels.length-1){
    if(surpriseSpike.warning===0&&surpriseSpike.active===0&&player.x+player.w>surpriseSpike.x-78){surpriseSpike.warning=7;}
