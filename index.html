@@ -193,21 +193,22 @@ function pauseGame(){if(gameState==='play'){gameState='paused';keys.left=keys.ri
 document.querySelector('#pauseToggle').addEventListener('click',pauseGame);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&gameState==='play')pauseGame();});
 const bossDialogue=[
-{who:'THE KID',face:'🧒',text:'Morra, monstro!—! O QUÊ-QUEM-QUANDO? Você!?'},
-{who:'THE FATHER',face:'🧔',text:'O que é isso?! OUTRA CRIANÇA? Haha, mais uma para a minha pontuação!'},
-{who:'THE KID',face:'🧒',text:'Eu superei a fruta, o espeto e a lua! Agora, eu vou superar você, O Cara (The Guy)!'},
-{who:'THE FATHER',face:'🧔',text:'Não. Não O Cara. O Pai!'},
-{who:'THE KID',face:'🧒',text:'O QUÊ?'},
-{who:'THE FATHER',face:'🧔',text:'Sim, agora eu reconheço você... FILHO. O CABELO. A CAMISETA. A CAPA. Você é uma das minhas cores mais jovens!'},
+{who:'THE KID',face:'🧒',text:'Morra, monstro!—! QUEMOQUÊ? Você!?'},
+{who:'THE GUY',face:'👨',text:'O que é isso?! OUTRA CRIANÇA? Haha, mais uma para a minha pontuação!'},
+{who:'THE KID',face:'🧒',text:'Eu superei as frutas, os espinhos e a lua! Agora, eu vou superar você, O Cara!'},
+{who:'THE GUY',face:'👨',text:'Não. Não “O Cara”. O Pai!'},
+{who:'THE KID',face:'🧒',text:'O QUÊ?!'},
+{who:'THE GUY',face:'👨',text:'Sim, agora eu reconheço você... FILHO. O CABELO. A CAMISA. A CAPA. Você é um dos meus filhos mais novos...'},
 {who:'THE KID',face:'🧒',text:'Isso é impossível!'},
-{who:'THE FATHER',face:'🧔',text:'Verifique sua tela de inventário, Garoto! Você sabe que é verdade.'},
-{who:'THE KID',face:'🧒',text:'Espere...! O antigo Avô O Cara! Você o matou!'},
-{who:'THE FATHER',face:'🧔',text:'Assim como você agora tentará me matar... Ou será morto você mesmo!'},
+{who:'THE GUY',face:'👨',text:'Verifique o seu inventário, garoto... você sabe que é verdade.'},
+{who:'THE KID',face:'🧒',text:'Espere! O antigo Avô “O Cara”! Você o matou!'},
+{who:'THE GUY',face:'👨',text:'Assim como você agora tentará me matar. Ou ser morto!'},
 {who:'THE KID',face:'🧒',text:'NÃO! EU QUERO SER O CARA!!!'}
 ];
 function showBossDialogue(){gameState='boss-dialogue';bossDialogueIndex=0;renderBossDialogue();document.querySelector('#overlay').style.display='flex';}
-function renderBossDialogue(){const d=bossDialogue[bossDialogueIndex];document.querySelector('#panel').innerHTML=`<h2>A VERDADE SOBRE O PAI</h2><div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:12px 0"><div style="font-size:58px;background:#11172b;border:2px solid #ffd45a;border-radius:8px;padding:8px 18px;image-rendering:pixelated">${d.face}</div><div style="text-align:left;max-width:330px"><strong style="color:#ffd45a;font-family:monospace">${d.who}</strong><p style="font-size:17px;line-height:1.45">“${d.text}”</p></div></div><p style="font-size:12px;color:#b9c2df">${bossDialogueIndex+1} / ${bossDialogue.length} · Enter, Espaço, S ou botão de tiro para continuar</p><button id="dialogueNext">${bossDialogueIndex===bossDialogue.length-1?'COMEÇAR A BATALHA':'CONTINUAR ▶'}</button>`;document.querySelector('#dialogueNext').onclick=advanceBossDialogue;}
-function advanceBossDialogue(){if(gameState!=='boss-dialogue')return;bossDialogueIndex++;if(bossDialogueIndex>=bossDialogue.length){bossDialogueSeen=true;gameState='play';bossIntroTimer=90;document.querySelector('#overlay').style.display='none';return;}renderBossDialogue();}
+function closeBossDialogue(){if(gameState!=='boss-dialogue')return;bossDialogueSeen=true;gameState='play';bossIntroTimer=90;keys.left=keys.right=keys.jump=keys.fire=false;pressedJump=pressedFire=false;document.querySelector('#overlay').style.display='none';}
+function renderBossDialogue(){const d=bossDialogue[bossDialogueIndex];document.querySelector('#panel').innerHTML=`<h2>A VERDADE SOBRE O PAI</h2><div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:12px 0"><div style="font-size:58px;background:#11172b;border:2px solid #ffd45a;border-radius:8px;padding:8px 18px;image-rendering:pixelated">${d.face}</div><div style="text-align:left;max-width:430px"><strong style="color:#ffd45a;font-family:monospace">${d.who}</strong><p style="font-size:17px;line-height:1.45">“${d.text}”</p></div></div><p style="font-size:12px;color:#b9c2df">${bossDialogueIndex+1} / ${bossDialogue.length} · Enter ou Espaço: continuar · S: pular cena</p><button id="dialogueNext">${bossDialogueIndex===bossDialogue.length-1?'COMEÇAR A BATALHA':'CONTINUAR ▶'}</button> <button id="dialogueSkip">PULAR CENA (S)</button>`;document.querySelector('#dialogueNext').onclick=advanceBossDialogue;document.querySelector('#dialogueSkip').onclick=closeBossDialogue;}
+function advanceBossDialogue(){if(gameState!=='boss-dialogue')return;if(bossDialogueIndex>=bossDialogue.length-1){closeBossDialogue();return;}bossDialogueIndex++;renderBossDialogue();}
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function shuffleBossAttacks(){}
@@ -232,7 +233,7 @@ function nearestTrapPlatform(x){const choices=platforms.filter(p=>p.y<485&&p.w>=
 // Rotas extras de plataformas flutuantes: mais caminhos de salto em quase todas as fases.
 const bonusRoutes={0:[[145,455,76,16],[300,405,82,16],[455,375,76,16],[610,430,82,16],[755,370,78,16]],1:[[120,450,72,16],[280,390,82,16],[455,335,76,16],[630,390,80,16],[790,350,76,16]],2:[[145,440,82,16],[305,385,76,16],[470,340,82,16],[650,385,76,16],[790,330,80,16]],3:[[130,445,75,16],[285,395,80,16],[440,350,76,16],[600,400,80,16],[770,350,76,16]],4:[[145,445,80,16],[300,395,76,16],[465,350,82,16],[625,405,76,16],[785,355,80,16]],5:[[130,445,76,16],[290,390,82,16],[450,345,76,16],[620,395,82,16],[790,345,76,16]],6:[[130,445,80,16],[300,390,76,16],[470,345,82,16],[640,395,76,16],[800,345,82,16]],7:[[140,445,76,16],[300,390,82,16],[465,345,76,16],[630,395,82,16],[795,345,76,16]],8:[[130,445,82,16],[300,390,76,16],[470,345,82,16],[640,395,76,16],[800,345,82,16]],9:[[125,445,76,16],[285,390,82,16],[455,345,76,16],[620,395,82,16],[790,345,76,16]],10:[[125,445,76,16],[280,385,82,16],[440,335,76,16],[600,390,82,16],[780,335,76,16]],11:[[125,445,82,16],[285,390,76,16],[455,340,82,16],[620,395,76,16],[790,340,82,16]],12:[[125,445,76,16],[285,390,82,16],[450,345,76,16],[620,395,82,16],[790,345,76,16]],13:[[125,445,82,16],[285,390,76,16],[455,340,82,16],[620,395,76,16],[790,340,82,16]],14:[[125,445,76,16],[285,390,82,16],[450,345,76,16],[620,395,82,16],[790,345,76,16]],15:[[125,445,82,16],[285,390,76,16],[455,340,82,16],[620,395,76,16],[790,340,82,16]]};
 if(bonusRoutes[level])platforms.push(...bonusRoutes[level].map(p=>({x:p[0],y:p[1],w:p[2],h:p[3],bonus:true})));
-if(level!==22&&!platforms.some(p=>p.y===490&&p.x===0&&p.w>=W)){platforms.push({x:0,y:490,w:W,h:50});}const spawn=(checkpoint.level===level?{x:checkpoint.x,y:checkpoint.y}:{x:45,y:420});player={x:spawn.x,y:spawn.y,w:32,h:32,vx:0,vy:0,on:false,face:1,inv:0,anim:0,jumps:0,shootAnim:0};saveBlocks=[{x:Math.min(440,Math.max(180,(l.goal||900)*.42)),y:Math.max(300,Math.min(445,platforms.find(p=>p.w>=100&&p.y<490)?.y-28||452)),w:26,h:28,active:checkpoint.level===level&&checkpoint.x>45}];destructibleBlocks=[{x:Math.min(690,Math.max(300,(l.goal||900)*.68)),y:Math.max(300,Math.min(452,platforms.find(p=>p.w>=100&&p.y<490)?.y-26||454)),w:28,h:26,hp:3,alive:true}];shotCooldown=0;fruitChasers=([2,6,10,14,18].includes(level)?[{x:Math.min(900,Math.max(610,(l.goal||900)*.78)),y:115,w:21,h:24,vx:0,vy:0,active:false,done:false}]:[]);enemies=[];for(let i=0;i<l.enemyCount;i++)enemies.push({x:220+i*145,y:450,w:27,h:30,vx:i%2?1.1:-1.1,alive:true});coins=[];[[210,360],[435,290],[655,350],[825,260],[520,450]].forEach(([x,y])=>coins.push({x,y,got:false}));shots=[];boss=levels[level].boss?{x:W-192-24,y:490,w:192,h:192,hp:120,maxHp:120,phase:1,dir:-1,face:-1,alive:true,flash:0,shotTimer:42,largeTimer:110,grenadeTimer:170,emerge:0,anim:0,mode:'emerge',modeTimer:0,platformIndex:-1,platformDir:-1,jump:null,cornerDashes:0}:null;endingTimer=0;endingApple=null;endingDodged=false;const plan=(level<levels.length-1&&level!==22)?trapPlan[level]:null;surpriseSpike=(plan&&plan.kind==='spike'?{x:level===8?855:Math.max(250,Math.min(855,plan.x)),warning:0,active:0,done:false}:null);worldHazards=[];gears=[];appleStorm=[];appleStormTimer=120+Math.random()*60;if(l.troll==='gears'){gears=[{x:350,y:454,r:17,vx:3.65,vy:-2.0,baseY:420,phase:0},{x:710,y:454,r:17,vx:-3.95,vy:1.9,baseY:425,phase:2}];}if(plan&&plan.kind==='applestorm'){appleStormTimer=120+Math.random()*60;}if(plan&&['cloud','tower','moon','boulder','laser','anvil','reverse','swap','lowgrav','fakefloor'].includes(plan.kind)){const kind=plan.kind;worldHazards.push({kind,x:Math.max(170,Math.min(850,plan.x)),y:kind==='moon'?-120:kind==='tower'?-260:kind==='anvil'?-100:kind==='laser'?330:kind==='boulder'?450:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:-80,w:kind==='moon'?192:kind==='tower'?62:kind==='anvil'?44:kind==='boulder'?48:kind==='laser'?960:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:100,h:kind==='moon'?192:kind==='tower'?270:kind==='anvil'?54:kind==='boulder'?44:kind==='laser'?10:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:48,state:'waiting',timer:0,delay:plan.delay,vy:0,done:false,dir:Math.random()<.5?-1:1});}caveTraps=[];cartFish=level===22?[{x:264,baseY:481,phase:0,w:36,h:28},{x:496,baseY:481,phase:38,w:36,h:28},{x:727,baseY:481,phase:76,w:36,h:28}]:[];cartX=player.x-23;cartY=470;cartRoll=0;cartLaunchTimer=0;
+if(level!==22&&!platforms.some(p=>p.y===490&&p.x===0&&p.w>=W)){platforms.push({x:0,y:490,w:W,h:50});}const spawn=(checkpoint.level===level?{x:checkpoint.x,y:checkpoint.y}:{x:45,y:420});player={x:spawn.x,y:spawn.y,w:32,h:32,vx:0,vy:0,on:false,face:1,inv:0,anim:0,jumps:0,shootAnim:0};saveBlocks=[{x:Math.min(440,Math.max(180,(l.goal||900)*.42)),y:Math.max(300,Math.min(445,platforms.find(p=>p.w>=100&&p.y<490)?.y-28||452)),w:26,h:28,active:checkpoint.level===level&&checkpoint.x>45}];destructibleBlocks=[{x:Math.min(690,Math.max(300,(l.goal||900)*.68)),y:Math.max(300,Math.min(452,platforms.find(p=>p.w>=100&&p.y<490)?.y-26||454)),w:28,h:26,hp:3,alive:true}];shotCooldown=0;fruitChasers=([2,6,10,14,18].includes(level)?[{x:Math.min(900,Math.max(610,(l.goal||900)*.78)),y:115,w:21,h:24,vx:0,vy:0,active:false,done:false}]:[]);enemies=[];for(let i=0;i<l.enemyCount;i++)enemies.push({x:220+i*145,y:450,w:27,h:30,vx:i%2?1.1:-1.1,alive:true});coins=[];[[210,360],[435,290],[655,350],[825,260],[520,450]].forEach(([x,y])=>coins.push({x,y,got:false}));shots=[];boss=levels[level].boss?{x:W-192-24,y:490,w:192,h:192,hp:120,maxHp:120,phase:1,dir:-1,face:-1,alive:true,flash:0,shotTimer:42,largeTimer:110,grenadeTimer:170,emerge:0,anim:0,mode:'emerge',modeTimer:0,platformIndex:-1,platformDir:-1,routeStage:'startClimb',jump:null,cornerDashes:0}:null;endingTimer=0;endingApple=null;endingDodged=false;const plan=(level<levels.length-1&&level!==22)?trapPlan[level]:null;surpriseSpike=(plan&&plan.kind==='spike'?{x:level===8?855:Math.max(250,Math.min(855,plan.x)),warning:0,active:0,done:false}:null);worldHazards=[];gears=[];appleStorm=[];appleStormTimer=120+Math.random()*60;if(l.troll==='gears'){gears=[{x:350,y:454,r:17,vx:3.65,vy:-2.0,baseY:420,phase:0},{x:710,y:454,r:17,vx:-3.95,vy:1.9,baseY:425,phase:2}];}if(plan&&plan.kind==='applestorm'){appleStormTimer=120+Math.random()*60;}if(plan&&['cloud','tower','moon','boulder','laser','anvil','reverse','swap','lowgrav','fakefloor'].includes(plan.kind)){const kind=plan.kind;worldHazards.push({kind,x:Math.max(170,Math.min(850,plan.x)),y:kind==='moon'?-120:kind==='tower'?-260:kind==='anvil'?-100:kind==='laser'?330:kind==='boulder'?450:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:-80,w:kind==='moon'?192:kind==='tower'?62:kind==='anvil'?44:kind==='boulder'?48:kind==='laser'?960:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:100,h:kind==='moon'?192:kind==='tower'?270:kind==='anvil'?54:kind==='boulder'?44:kind==='laser'?10:kind==='reverse'||kind==='swap'||kind==='lowgrav'||kind==='fakefloor'?0:48,state:'waiting',timer:0,delay:plan.delay,vy:0,done:false,dir:Math.random()<.5?-1:1});}caveTraps=[];cartFish=level===22?[{x:264,baseY:481,phase:0,w:36,h:28},{x:496,baseY:481,phase:38,w:36,h:28},{x:727,baseY:481,phase:76,w:36,h:28}]:[];cartX=player.x-23;cartY=470;cartRoll=0;cartLaunchTimer=0;
  // Pixel-perfect spike gauntlets: fixed positions, repeatable after every respawn.
  // Each spike is a triangle with a narrow collision profile, not a full rectangle.
  const spikeCourses={
@@ -260,7 +261,7 @@ Promise.all([appleSprite.decode(), moonSprite.decode()].map(p=>p.catch(()=>null)
   document.querySelector('#start')?.setAttribute('data-sprites-ready', window.noMercySpritesReady ? 'true' : 'false');
 });
 function showOverlay(title,msg,button){gameState='menu';if(title==='VITÓRIA!'){const r=saveRunRecord();const elapsed=Math.max(0,Math.floor((Date.now()-(runStart||Date.now()))/1000));msg+='\n\nRECORDE SALVO! Pontuação: '+(r.score||score)+' · Tempo: '+fmtTime(elapsed)+' · Mortes: '+deathCount;}document.querySelector('#panel').innerHTML=`<h2>${title}</h2><p style="white-space:pre-line">${msg}</p><button id="start">${button}</button>`;document.querySelector('#start').onclick=()=>{if(title==='FIM DE JOGO'||title==='VITÓRIA!')start();else{gameState='play';document.querySelector('#overlay').style.display='none'}};document.querySelector('#overlay').style.display='flex'}
-window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(gameState==='play'||gameState==='paused'){e.preventDefault();pauseGame();return}}if(gameState==='boss-dialogue'&&(e.code==='Enter'||e.code==='Space'||e.code==='KeyS')){e.preventDefault();advanceBossDialogue();return}if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','KeyA','KeyD','KeyW','KeyX','KeyZ','KeyQ'].includes(e.code))e.preventDefault();if(e.code==='KeyQ'&&gameState==='play'){hurt();return}if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=true;if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=true;if(['ArrowUp','KeyW','Space'].includes(e.code)){if(!keys.jump)pressedJump=true;keys.jump=true}if(e.code==='KeyX'||e.code==='KeyZ'){if(!keys.fire)pressedFire=true;keys.fire=true}if(e.code==='KeyR'&&(gameState==='dead'||gameState==='play'||gameState==='boss-dialogue')){if(gameState==='dead'){start()}else if(gameState==='boss-dialogue'){bossDialogueSeen=true;shuffleBossAttacks();resetLevel();gameState='play';bossIntroTimer=90;document.querySelector('#overlay').style.display='none'}else{shuffleBossAttacks();resetLevel()}}});
+window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(gameState==='play'||gameState==='paused'){e.preventDefault();pauseGame();return}}if(gameState==='boss-dialogue'){if(e.code==='KeyS'){e.preventDefault();closeBossDialogue();return}if(e.code==='Enter'||e.code==='Space'){e.preventDefault();advanceBossDialogue();return}}if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','KeyA','KeyD','KeyW','KeyX','KeyZ','KeyQ'].includes(e.code))e.preventDefault();if(e.code==='KeyQ'&&gameState==='play'){hurt();return}if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=true;if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=true;if(['ArrowUp','KeyW','Space'].includes(e.code)){if(!keys.jump)pressedJump=true;keys.jump=true}if(e.code==='KeyX'||e.code==='KeyZ'){if(!keys.fire)pressedFire=true;keys.fire=true}if(e.code==='KeyR'&&(gameState==='dead'||gameState==='play'||gameState==='boss-dialogue')){if(gameState==='dead'){start()}else if(gameState==='boss-dialogue'){bossDialogueSeen=true;shuffleBossAttacks();resetLevel();gameState='play';bossIntroTimer=90;document.querySelector('#overlay').style.display='none'}else{shuffleBossAttacks();resetLevel()}}});
 window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=false;if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=false;if(['ArrowUp','KeyW','Space'].includes(e.code)){keys.jump=false;jumpHeld=false;if(player&&player.vy<0)player.vy*=0.48}if(e.code==='KeyX'||e.code==='KeyZ')keys.fire=false});
 document.querySelectorAll('.ctl').forEach(b=>{const k=b.dataset.key;const down=e=>{e.preventDefault();if(gameState==='boss-dialogue'&&k==='fire'){advanceBossDialogue();return}if(k==='jump'&&!keys.jump)pressedJump=true;if(k==='fire'&&!keys.fire)pressedFire=true;keys[k]=true};const up=e=>{e.preventDefault();keys[k]=false};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)});
 function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
@@ -302,7 +303,7 @@ function finishDeath(){gameState='play';clearMusicProjectile();resetLevel();docu
 function update(){
  if(gameState==='boss-dialogue')return;
  if(gameState==='dying'){frame++;deathTimer--;player.anim++;player.vy+=.42;player.x+=player.vx;player.y+=player.vy;player.vx*=.96;if(deathTimer<=0)finishDeath();return}
- if(gameState==='cart-launch'){frame++;cartLaunchTimer++;player.anim++;player.x+=player.vx;player.y+=player.vy;player.vy+=.20;if(cartLaunchTimer>68||player.x>W+22){level++;checkpoint={level,x:45,y:420};resetLevel();}return}
+ if(gameState==='cart-launch'){frame++;cartLaunchTimer++;player.anim++;player.x+=player.vx;player.y+=player.vy;player.vy+=.20;if(cartLaunchTimer>68||player.x>W+22){level++;checkpoint={level,x:45,y:420};resetLevel();if(levels[level]&&levels[level].boss&&!bossDialogueSeen)showBossDialogue();}return}
  if(gameState==='victory-dodge'){frame++;player.anim++;player.vx=(keys.right?3.2:0)-(keys.left?3.2:0);if(pressedJump&&player.jumps<1){player.vy=-11.8;player.on=false;player.jumps=1;}pressedJump=false;player.vy=Math.min(player.vy+.48,13);player.x=Math.max(0,Math.min(W-player.w,player.x+player.vx));player.y+=player.vy;if(player.y+player.h>=490){player.y=490-player.h;player.vy=0;player.on=true;player.jumps=0;}else player.on=false;if(endingApple){endingApple.x+=endingApple.vx;endingApple.y+=endingApple.vy;if(overlap(player,endingApple)){hurt();}if(endingApple.x<-40||endingApple.x>W+40||endingApple.y<-40||endingApple.y>H+40){endingApple=null;endingDodged=true;showOverlay('VITÓRIA!','Você zerou NO MERCY! Moedas: '+score+' · Mortes: '+deathCount+' · Tempo: '+document.querySelector('#stats').textContent,'JOGAR DE NOVO');}}else{endingTimer--;if(endingTimer<=0){let dx=player.x+player.w/2-(Math.random()<.5?0:W);let dy=player.y+player.h/2-490;let mag=Math.hypot(dx,dy)||1;endingApple={x:Math.random()<.5?-20:W+20,y:490,w:22,h:22,vx:(player.x+player.w/2-(Math.random()<.5?-20:W+20))/20,vy:-0.2};const tx=player.x+player.w/2,ty=player.y+player.h/2;const sx=endingApple.x,sy=endingApple.y;const m=Math.hypot(tx-sx,ty-sy)||1;endingApple.vx=(tx-sx)/m*21;endingApple.vy=(ty-sy)/m*21;}}return;}if(gameState!=='play')return;frame++;if(frame%30===0)updateHud();player.anim++;if(player.shootAnim>0)player.shootAnim--;const bossIntroActive=!!(boss&&boss.alive&&bossIntroTimer>0);if(bossIntroTimer>0)bossIntroTimer--;if(reverseTimer>0)reverseTimer--;if(swapTimer>0)swapTimer--;if(lowGravityTimer>0)lowGravityTimer--;const moveLeft=reverseTimer>0?keys.right:keys.left,moveRight=reverseTimer>0?keys.left:keys.right;const doJump=swapTimer>0?pressedFire:pressedJump;const axis=(moveRight?1:0)-(moveLeft?1:0);if(bossIntroActive)player.vx=0;else if(axis)player.vx=Math.max(-4.25,Math.min(4.25,player.vx+axis*.58));else player.vx*=.78;if(level===22)player.vx=Math.max(1.35,player.vx);if(Math.abs(player.vx)<.12)player.vx=0;if(axis)player.face=axis>0?1:-1;
  if(!bossIntroActive&&doJump&&player.jumps<2){player.vy=player.jumps===0?-12.1:-10.8;player.on=false;player.jumps++;jumpHeld=true;playJump(player.jumps);}pressedJump=false;if(!keys.jump)jumpHeld=false;if(!jumpHeld&&player.vy<0)player.vy=Math.max(player.vy,-5.0);
  if(!bossIntroActive&&keys.fire&&shotCooldown<=0){shots.push({x:player.x+(player.face>0?player.w:-10),y:player.y+player.h/2-3.5,w:12,h:7,vx:player.face*8,life:75});player.shootAnim=12;shotCooldown=7;playShot();}if(shotCooldown>0)shotCooldown--;pressedFire=false;
@@ -378,111 +379,125 @@ function update(){
  for(const s of shots){s.x+=s.vx;s.life--;for(const b of destructibleBlocks){if(b.alive&&overlap(s,b)){b.hp--;s.life=0;playBreak();if(b.hp<=0)b.alive=false;}}for(const b of saveBlocks){if(overlap(s,b)){s.life=0;if(!b.active){b.active=true;checkpoint={level,x:Math.max(35,Math.min(W-50,player.x-12)),y:Math.max(200,player.y)};playSave();updateHud();}}}for(const e of enemies)if(e.alive&&overlap(s,e)){e.alive=false;score+=25;s.life=0}if(boss&&boss.alive&&overlap(s,boss)){boss.hp--;boss.flash=7;s.life=0;if(boss.hp<=0){boss.alive=false;score+=500;bossShots=[];showOverlay('VITÓRIA!','VOCÊ DERROTOU O CHEFÃO!','JOGAR NOVAMENTE');}}}
  for(const s of shots){if(s.life<=0)continue;for(const cl of clones){if(cl.life>0&&overlap(s,cl)){cl.life=0;s.life=0;score+=40;break;}}}
  shots=shots.filter(s=>s.life>0&&s.x>-20&&s.x<W+20);
- // Final-stage troll: apples erupt from cracks in the floor. A clear crack warning gives a short dodge window.
-  if(boss&&boss.alive){
-    if(boss.emerge<1){
-      boss.emerge=Math.min(1,boss.emerge+0.018);
-      boss.y=490-boss.h*boss.emerge;
-      if(boss.emerge>=1){boss.mode='patrol';boss.modeTimer=0;boss.platformIndex=-1;}
-    }
-    boss.anim++;
-    const bossPlatforms=platforms.filter(p=>p.y<480&&p.w>=55).sort((a,b)=>a.x-b.x);
-    if(boss.emerge>=1){
-      if(boss.mode==='jump'&&boss.jump){
-        const j=boss.jump;
-        j.frame++;
-        const t=Math.min(1,j.frame/j.duration);
-        boss.x=j.fromX+(j.toX-j.fromX)*t;
-        boss.y=j.fromY+(j.toY-j.fromY)*t-Math.sin(Math.PI*t)*(j.cornerDash?145:105);
-        boss.dir=(j.toX>=j.fromX)?1:-1;
-        if(t>=1){
-          boss.x=j.toX;boss.y=j.toY;boss.platformIndex=j.targetIndex;
-          boss.jump=null;boss.mode='patrol';boss.modeTimer=0;boss.dir=-1;
-        }
-      } else {
-        const currentPlatform=boss.platformIndex>=0?bossPlatforms[boss.platformIndex]:platforms.find(p=>p.y===490&&p.x===0&&p.w>=W);
-        const baseY=currentPlatform?currentPlatform.y:490;
-        boss.y=baseY-boss.h;
-        // Patrulha pela plataforma inteira em vez de ficar andando num trecho minúsculo.
-        let minX=0,maxX=W-boss.w;
-        if(currentPlatform){
-          const pad=6;
-          minX=Math.max(0,currentPlatform.x+pad);
-          maxX=Math.min(W-boss.w,currentPlatform.x+currentPlatform.w-boss.w-pad);
-          if(maxX<minX){const center=currentPlatform.x+currentPlatform.w/2-boss.w/2;minX=Math.max(0,center);maxX=Math.min(W-boss.w,center);}
-        }
-        boss.x+=boss.dir*2.15;
-        if(boss.x<=minX){boss.x=minX;boss.dir=1;boss.modeTimer=Math.max(boss.modeTimer,145);}else if(boss.x>=maxX){boss.x=maxX;boss.dir=-1;boss.modeTimer=Math.max(boss.modeTimer,145);}
-        boss.modeTimer++;
-        // Anda e ataca por um tempo; depois salta para a próxima plataforma.
-        if(boss.modeTimer>=150&&bossPlatforms.length){
-          let targetIndex;
-          if(boss.platformIndex<0){targetIndex=bossPlatforms.length-1;boss.platformDir=-1;}
-          else {
-            if(boss.platformIndex<=0)boss.platformDir=1;
-            else if(boss.platformIndex>=bossPlatforms.length-1)boss.platformDir=-1;
-            targetIndex=Math.max(0,Math.min(bossPlatforms.length-1,boss.platformIndex+boss.platformDir));
-          }
-          // Troll move: exactly four possible corner-to-corner leaps per fight.
-          // He pauses at an edge, then unexpectedly crosses to the far platform.
-          let cornerDash=false;
-          const atLeftCorner=boss.x<=W*0.18;
-          const atRightCorner=boss.x+boss.w>=W*0.82;
-          if(boss.cornerDashes<4&&(atLeftCorner||atRightCorner)&&bossPlatforms.length>1){
-            cornerDash=true;
-            targetIndex=atLeftCorner?bossPlatforms.length-1:0;
-            boss.cornerDashes++;
-          }
-          const target=bossPlatforms[targetIndex];
-          const fromX=boss.x,fromY=boss.y,toX=Math.max(0,Math.min(W-boss.w,target.x+target.w/2-boss.w/2)),toY=target.y-boss.h;
-          const duration=cornerDash?Math.max(44,Math.min(76,Math.ceil(Math.abs(toX-fromX)/4.2))):Math.max(26,Math.min(58,Math.ceil(Math.abs(toX-fromX)/5.2)));
-          boss.jump={fromX,fromY,toX,toY,targetIndex,frame:0,duration,cornerDash};
-          boss.mode='jump';boss.modeTimer=0;
-        }
-      }
-    }
-    boss.face=(player.x+player.w/2<boss.x+boss.w/2)?-1:1;
-    if(boss.flash>0)boss.flash--;
+ // Chefao final: sobe pelas plataformas atirando, desce no canto oposto,
+ // atravessa o chao sob fogo constante e volta a subir do outro lado.
+ if(boss&&boss.alive){
+   boss.anim++;
+   const bossPlatforms=platforms.filter(p=>p.y<480&&p.w>=55).sort((a,b)=>a.x-b.x);
+   const beginBossJump=(targetIndex,nextRouteStage,nextDir)=>{
+     const target=targetIndex>=0?bossPlatforms[targetIndex]:null;
+     const fromX=boss.x,fromY=boss.y;
+     const toX=target?Math.max(0,Math.min(W-boss.w,target.x+target.w/2-boss.w/2)):0;
+     const toY=target?target.y-boss.h:490-boss.h;
+     const distance=Math.abs(toX-fromX);
+     const duration=Math.max(30,Math.min(76,Math.ceil(distance/4.2+Math.abs(toY-fromY)*0.16)));
+     boss.jump={fromX,fromY,toX,toY,targetIndex,frame:0,duration,cornerDash:false,nextRouteStage,nextDir};
+     boss.mode='jump';boss.modeTimer=0;
+   };
+   if(boss.emerge<1){
+     boss.emerge=Math.min(1,boss.emerge+0.018);
+     boss.y=490-boss.h*boss.emerge;
+     if(boss.emerge>=1){
+       boss.mode='patrol';boss.modeTimer=0;boss.platformIndex=-1;
+       boss.routeStage='startClimb';boss.dir=1;
+     }
+   }
+   if(boss.emerge>=1){
+     if(boss.mode==='jump'&&boss.jump){
+       const j=boss.jump;
+       j.frame++;
+       const t=Math.min(1,j.frame/j.duration);
+       boss.x=j.fromX+(j.toX-j.fromX)*t;
+       boss.y=j.fromY+(j.toY-j.fromY)*t-Math.sin(Math.PI*t)*(j.cornerDash?145:105);
+       boss.dir=(j.toX>=j.fromX)?1:-1;
+       if(t>=1){
+         boss.x=j.toX;boss.y=j.toY;boss.platformIndex=j.targetIndex;
+         boss.routeStage=j.nextRouteStage;boss.dir=j.nextDir;
+         boss.jump=null;boss.mode='patrol';boss.modeTimer=0;
+       }
+     }else if(boss.routeStage==='startClimb'){
+       // Comeca na plataforma superior da direita, sem caminhar inutilmente pelo chao.
+       beginBossJump(bossPlatforms.length-1,'climb',-1);
+     }else if(boss.routeStage==='crossRight'){
+       // Depois de descer no canto esquerdo, cruza todo o chao enquanto dispara.
+       const maxX=W-boss.w;
+       boss.y=490-boss.h;boss.dir=1;
+       if(boss.x<maxX-1){boss.x=Math.min(maxX,boss.x+2.15);boss.modeTimer=0;}
+       else{
+         boss.x=maxX;boss.modeTimer++;
+         if(boss.modeTimer>=90)beginBossJump(bossPlatforms.length-1,'climb',-1);
+       }
+     }else{
+       const currentPlatform=boss.platformIndex>=0?bossPlatforms[boss.platformIndex]:platforms.find(p=>p.y===490&&p.x===0&&p.w>=W);
+       const baseY=currentPlatform?currentPlatform.y:490;
+       boss.y=baseY-boss.h;
+       let minX=0,maxX=W-boss.w;
+       if(currentPlatform&&boss.platformIndex>=0){
+         const center=currentPlatform.x+currentPlatform.w/2-boss.w/2;
+         const rawMin=currentPlatform.x+6;
+         const rawMax=currentPlatform.x+currentPlatform.w-boss.w-6;
+         if(rawMax<rawMin){
+           // O sprite do Pai e maior que cada plataforma: centraliza em vez de inverter os limites.
+           minX=maxX=Math.max(0,Math.min(W-boss.w,center));
+         }else{minX=Math.max(0,rawMin);maxX=Math.min(W-boss.w,rawMax);}
+       }
+       if(maxX-minX<2){boss.x=minX;}
+       else{
+         boss.x=Math.max(minX,Math.min(maxX,boss.x+boss.dir*2.15));
+         if(boss.x<=minX)boss.dir=1;else if(boss.x>=maxX)boss.dir=-1;
+       }
+       boss.modeTimer++;
+       if(boss.modeTimer>=150){
+         if(boss.platformIndex<=0){
+           // Sai da ultima plataforma e desce ate o canto esquerdo.
+           beginBossJump(-1,'crossRight',1);
+         }else{
+           // Percorre as plataformas da direita para a esquerda.
+           beginBossJump(boss.platformIndex-1,'climb',-1);
+         }
+       }
+     }
+   }
+   boss.face=(player.x+player.w/2<boss.x+boss.w/2)?-1:1;
+   if(boss.flash>0)boss.flash--;
 
-    // The boss aims each shot at the Kid's current position, not just left/right.
-    // Attacks happen while patrolling; jumping is the repositioning phase of the cycle.
-    if(boss.emerge>=1&&boss.mode==='patrol'){
-      const toward=player.x+player.w/2<boss.x+boss.w/2?-1:1;
-      const fromX=toward<0?boss.x+22:boss.x+boss.w-22;
-      const fromY=boss.y+boss.h*0.42;
-      const targetX=player.x+player.w/2,targetY=player.y+player.h/2;
-      const dx=targetX-fromX,dy=targetY-fromY,mag=Math.hypot(dx,dy)||1;
-      // Direciona o tiro para a posição atual do jogador usando um ângulo em 2D.
-      const angle=Math.atan2(player.y+player.h/2-fromY,player.x+player.w/2-fromX);
-      boss.shotTimer--;
-      if(boss.shotTimer<=0){
-        const speed=7.8;
-        bossShots.push({kind:'small',x:fromX-11,y:fromY-11,w:22,h:22,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:220});
-        boss.shotTimer=42;
-      }
-      boss.largeTimer--;
-      if(boss.largeTimer<=0){
-        const speed=5.1;
-        bossShots.push({kind:'large',x:fromX-19,y:fromY+4,w:38,h:38,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:240});
-        boss.largeTimer=145;
-      }
-      boss.grenadeTimer--;
-      if(boss.grenadeTimer<=0){
-        const flight=Math.max(25,Math.min(56,Math.ceil(Math.abs(dx)/4.2)));
-        // Discrete ballistic arc is solved so the grenade reaches the target height at the predicted time.
-        const gravity=0.22;
-        const gVx=dx/flight;
-        const gVy=dy/flight-gravity*(flight+1)/2;
-        bossShots.push({kind:'grenade',x:fromX-13,y:fromY-13,w:26,h:26,vx:gVx,vy:gVy,life:flight+22,anim:0,bounces:0});
-        boss.grenadeTimer=215;
-      }
-    }
-    if(overlap(player,boss)){
-      if(player.x+player.w/2<boss.x+boss.w/2)player.x=boss.x-player.w;
-      else player.x=boss.x+boss.w;
-      hurt('Você chegou perto demais do chefão!');
-    }
-  }
+   // TODOS os ataques continuam ativos durante o salto e a travessia do chao.
+   // Cada disparo mira a posicao atual do Kid a partir da posicao atual do chefao.
+   if(boss.emerge>=1&&(boss.mode==='patrol'||boss.mode==='jump')){
+     const toward=player.x+player.w/2<boss.x+boss.w/2?-1:1;
+     const fromX=toward<0?boss.x+22:boss.x+boss.w-22;
+     const fromY=boss.y+boss.h*0.42;
+     const targetX=player.x+player.w/2,targetY=player.y+player.h/2;
+     const dx=targetX-fromX,dy=targetY-fromY;
+     const angle=Math.atan2(dy,dx);
+     boss.shotTimer--;
+     if(boss.shotTimer<=0){
+       const speed=7.8;
+       bossShots.push({kind:'small',x:fromX-11,y:fromY-11,w:22,h:22,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:220});
+       boss.shotTimer=42;
+     }
+     boss.largeTimer--;
+     if(boss.largeTimer<=0){
+       const speed=5.1;
+       bossShots.push({kind:'large',x:fromX-19,y:fromY+4,w:38,h:38,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:240});
+       boss.largeTimer=145;
+     }
+     boss.grenadeTimer--;
+     if(boss.grenadeTimer<=0){
+       const flight=Math.max(25,Math.min(56,Math.ceil(Math.abs(dx)/4.2)));
+       const gravity=0.22;
+       const gVx=dx/flight;
+       const gVy=dy/flight-gravity*(flight+1)/2;
+       bossShots.push({kind:'grenade',x:fromX-13,y:fromY-13,w:26,h:26,vx:gVx,vy:gVy,life:flight+22,anim:0,bounces:0});
+       boss.grenadeTimer=215;
+     }
+   }
+   if(overlap(player,boss)){
+     if(player.x+player.w/2<boss.x+boss.w/2)player.x=boss.x-player.w;
+     else player.x=boss.x+boss.w;
+     hurt('Você chegou perto demais do chefão!');
+   }
+ }
 
 for(const bs of bossShots){
  if(bs.kind==='grenade'){bs.anim=(bs.anim||0)+1;bs.vy=Math.min((bs.vy||0)+0.22,10);bs.x+=bs.vx;bs.y+=bs.vy;bs.life--;if(overlap(player,bs)){hurt('Uma granada do chefão acertou The Kid!');bs.life=0;}if(bs.y+bs.h>=490&&bs.life>0){bs.y=490-bs.h;if(!bs.bounces){bs.bounces=1;bs.vy=-Math.max(2.2,Math.abs(bs.vy)*0.38);bs.vx*=0.78;}else{const dx=(player.x+player.w/2)-(bs.x+bs.w/2),dy=(player.y+player.h/2)-(bs.y+bs.h/2);if(Math.hypot(dx,dy)<85)hurt('Uma granada do chefão explodiu perto de você!');bs.life=0;}}if(bs.life<=0){const dx=(player.x+player.w/2)-(bs.x+bs.w/2),dy=(player.y+player.h/2)-(bs.y+bs.h/2);if(Math.hypot(dx,dy)<50)hurt('Uma granada do chefão explodiu perto de você!');} }
@@ -522,7 +537,7 @@ bossShots=bossShots.filter(bs=>bs.life>0&&bs.x>-80&&bs.x<W+80&&bs.y>-80&&bs.y<H+
      if(surpriseSpike.active===0)surpriseSpike.done=true;
    }
  }
- if(player.x>levels[level].goal&&(!boss||!boss.alive)&&gameState==='play'){if(level===22){gameState='cart-launch';cartLaunchTimer=0;player.x=865;player.y=Math.min(player.y,452);player.vx=2.35;player.vy=-10.5;playJump(2);}else if(level<levels.length-1){level++;checkpoint={level,x:45,y:420};resetLevel()}else startVictoryDodge()}
+ if(player.x>levels[level].goal&&(!boss||!boss.alive)&&gameState==='play'){if(level===22){gameState='cart-launch';cartLaunchTimer=0;player.x=865;player.y=Math.min(player.y,452);player.vx=2.35;player.vy=-10.5;playJump(2);}else if(level<levels.length-1){level++;checkpoint={level,x:45,y:420};resetLevel();if(levels[level].boss&&!bossDialogueSeen)showBossDialogue()}else startVictoryDodge()}
  camera=Math.max(0,Math.min(W-960,player.x-300));updateHud()
 }
 function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x-camera),Math.round(y),w,h)}
